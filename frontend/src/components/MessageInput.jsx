@@ -73,33 +73,35 @@ function MessageInput() {
 
   return (
     <div 
-      className={`p-4 border-t transition-all duration-200 ${
+      className={`p-4 border-t transition-all duration-200 bg-slate-800/30 backdrop-blur-sm ${
         isDraggingOver 
-          ? "bg-cyan-500/10 border-cyan-500 border-2" 
-          : "border-slate-700/50"
+          ? "bg-cyan-500/10 border-cyan-500/50 border-2" 
+          : "border-slate-700/30"
       }`}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
       {isDraggingOver && (
-        <div className="max-w-3xl mx-auto mb-3 text-center py-8 border-2 border-dashed border-cyan-500 rounded-lg bg-cyan-500/5">
-          <UploadCloudIcon className="w-12 h-12 text-cyan-400 mx-auto mb-2 animate-bounce" />
-          <p className="text-cyan-400 text-lg font-medium">Drop your media file here</p>
-          <p className="text-cyan-400/70 text-sm mt-1">Images and videos supported</p>
+        <div className="max-w-3xl mx-auto mb-3 text-center py-6 border-2 border-dashed border-cyan-500/50 rounded-2xl bg-gradient-to-br from-cyan-500/5 via-blue-500/5 to-purple-500/5 backdrop-blur-sm">
+          <UploadCloudIcon className="w-10 h-10 text-cyan-400 mx-auto mb-2 animate-bounce" />
+          <p className="text-cyan-400 text-base font-semibold">Drop your media here</p>
+          <p className="text-cyan-400/60 text-xs mt-1">Images and videos supported</p>
         </div>
       )}
       {imagePreview && (
-        <div className="max-w-3xl mx-auto mb-3 flex items-center">
-          <div className="relative">
-            <img
-              src={imagePreview}
-              alt="Preview"
-              className="w-20 h-20 object-cover rounded-lg border border-slate-700"
-            />
+        <div className="max-w-3xl mx-auto mb-3">
+          <div className="relative inline-block">
+            <div className="rounded-xl overflow-hidden border-2 border-slate-700/50 shadow-lg">
+              <img
+                src={imagePreview}
+                alt="Preview"
+                className="h-24 object-cover"
+              />
+            </div>
             <button
               onClick={removeImage}
-              className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-slate-800 flex items-center justify-center text-slate-200 hover:bg-slate-700"
+              className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center text-white shadow-lg transition-all hover:scale-110"
               type="button"
             >
               <XIcon className="w-4 h-4" />
@@ -108,16 +110,18 @@ function MessageInput() {
         </div>
       )}
 
-      <form onSubmit={handleSendMessage} className="max-w-3xl mx-auto flex space-x-4">
-        <input
-          type="text"
-          value={text}
-          onChange={(e) => {
-            setText(e.target.value);
-          }}
-          className="flex-1 bg-slate-800/50 border border-slate-700/50 rounded-lg py-2 px-4"
-          placeholder="Type your message..."
-        />
+      <form onSubmit={handleSendMessage} className="max-w-3xl mx-auto flex items-end gap-2">
+        <div className="flex-1 bg-slate-800/60 border border-slate-700/50 rounded-2xl p-1.5 focus-within:border-cyan-500/50 focus-within:ring-2 focus-within:ring-cyan-500/20 transition-all">
+          <input
+            type="text"
+            value={text}
+            onChange={(e) => {
+              setText(e.target.value);
+            }}
+            className="w-full bg-transparent border-0 text-slate-100 placeholder-slate-500 focus:outline-none px-3 py-2 text-sm"
+            placeholder="Type your message..."
+          />
+        </div>
 
         <input
           type="file"
@@ -130,16 +134,15 @@ function MessageInput() {
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
-          className={`bg-slate-800/50 text-slate-400 hover:text-slate-200 rounded-lg px-4 transition-colors ${
-            imagePreview ? "text-cyan-500" : ""
-          }`}
+          className="p-3 bg-slate-800/60 hover:bg-slate-700/60 border border-slate-700/50 hover:border-cyan-500/50 text-slate-400 hover:text-cyan-400 rounded-xl transition-all"
         >
           <ImageIcon className="w-5 h-5" />
         </button>
+        
         <button
           type="submit"
           disabled={!text.trim() && !imagePreview}
-          className="bg-gradient-to-r from-cyan-500 to-cyan-600 text-white rounded-lg px-4 py-2 font-medium hover:from-cyan-600 hover:to-cyan-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          className="p-3 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white rounded-xl shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 active:scale-95 disabled:hover:scale-100"
         >
           <SendIcon className="w-5 h-5" />
         </button>

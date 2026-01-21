@@ -42,8 +42,10 @@ function ChatsList() {
       {chats.map((chat) => (
         <div
           key={chat._id}
-          className={`bg-cyan-500/10 p-4 rounded-lg cursor-pointer hover:bg-cyan-500/20 transition-all ${
-            dragOverUserId === chat._id ? "bg-cyan-500/30 scale-105 ring-2 ring-cyan-500" : ""
+          className={`group relative p-3 rounded-xl cursor-pointer transition-all duration-200 ${
+            dragOverUserId === chat._id 
+              ? "bg-gradient-to-r from-cyan-500/30 to-blue-500/30 scale-[1.02] ring-2 ring-cyan-400/50 shadow-lg" 
+              : "bg-slate-800/40 hover:bg-slate-800/60 hover:shadow-md"
           }`}
           onClick={() => setSelectedUser(chat)}
           onDragOver={(e) => handleDragOver(e, chat._id)}
@@ -51,12 +53,22 @@ function ChatsList() {
           onDrop={(e) => handleDrop(e, chat)}
         >
           <div className="flex items-center gap-3">
-            <div className={`avatar ${onlineUsers.includes(chat._id) ? "online" : "offline"}`}>
-              <div className="size-12 rounded-full">
-                <img src={chat.profilePic || "/avatar.png"} alt={chat.fullName} />
+            <div className="relative">
+              <div className="w-11 h-11 rounded-xl overflow-hidden ring-2 ring-slate-700/50 group-hover:ring-cyan-500/50 transition-all">
+                <img src={chat.profilePic || "/avatar.png"} alt={chat.fullName} className="w-full h-full object-cover" />
               </div>
+              {onlineUsers.includes(chat._id) && (
+                <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-slate-800 animate-pulse" />
+              )}
             </div>
-            <h4 className="text-slate-200 font-medium truncate">{chat.fullName}</h4>
+            <div className="flex-1 min-w-0">
+              <h4 className="text-slate-100 font-medium text-sm truncate group-hover:text-white transition-colors">
+                {chat.fullName}
+              </h4>
+              <p className="text-slate-500 text-xs truncate mt-0.5">
+                {onlineUsers.includes(chat._id) ? "Active now" : "Offline"}
+              </p>
+            </div>
           </div>
         </div>
       ))}

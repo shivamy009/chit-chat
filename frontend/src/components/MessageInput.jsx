@@ -1,30 +1,46 @@
 import { useRef, useState } from "react";
-import { useChatStore } from "../store/useChatStore";
+import { useDispatch, useSelector } from "react-redux";
 import toast from "react-hot-toast";
-import { ImageIcon, SendIcon, XIcon, UploadCloudIcon } from "lucide-react";
+import {
+  ImageIcon,
+  SendIcon,
+  XIcon,
+  UploadCloudIcon,
+} from "lucide-react";
+
+import { sendMessage } from "../store/chatSlice";
 
 function MessageInput() {
+  const dispatch = useDispatch();
+  const selectedUser = useSelector((state) => state.chat.selectedUser);
+
   const [text, setText] = useState("");
   const [imagePreview, setImagePreview] = useState(null);
   const [isDraggingOver, setIsDraggingOver] = useState(false);
 
   const fileInputRef = useRef(null);
 
-  const { sendMessage } = useChatStore();
-
+  /* ---------------- SEND MESSAGE ---------------- */
   const handleSendMessage = (e) => {
     e.preventDefault();
     if (!text.trim() && !imagePreview) return;
 
-    sendMessage({
-      text: text.trim(),
-      image: imagePreview,
-    });
+    dispatch(
+      sendMessage({
+        messageData: {
+          text: text.trim(),
+          image: imagePreview,
+        },
+        selectedUserId: selectedUser._id,
+      })
+    );
+
     setText("");
-    setImagePreview("");
+    setImagePreview(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
+  /* ---------------- IMAGE PICK ---------------- */
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -42,6 +58,7 @@ function MessageInput() {
     reader.readAsDataURL(file);
   };
 
+  /* ---------------- DRAG & DROP ---------------- */
   const handleDragOver = (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -61,8 +78,7 @@ function MessageInput() {
 
     const files = e.dataTransfer.files;
     if (files && files.length > 0) {
-      const file = files[0];
-      processImageFile(file);
+      processImageFile(files[0]);
     }
   };
 
@@ -71,24 +87,32 @@ function MessageInput() {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
+  /* ---------------- UI ---------------- */
   return (
-    <div 
+    <div
       className={`p-4 border-t transition-all duration-200 bg-slate-800/30 backdrop-blur-sm ${
-        isDraggingOver 
-          ? "bg-cyan-500/10 border-cyan-500/50 border-2" 
+        isDraggingOver
+          ? "bg-cyan-500/10 border-cyan-500/50 border-2"
           : "border-slate-700/30"
       }`}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
+      {/* Drag Overlay */}
       {isDraggingOver && (
         <div className="max-w-3xl mx-auto mb-3 text-center py-6 border-2 border-dashed border-cyan-500/50 rounded-2xl bg-gradient-to-br from-cyan-500/5 via-blue-500/5 to-purple-500/5 backdrop-blur-sm">
           <UploadCloudIcon className="w-10 h-10 text-cyan-400 mx-auto mb-2 animate-bounce" />
-          <p className="text-cyan-400 text-base font-semibold">Drop your media here</p>
-          <p className="text-cyan-400/60 text-xs mt-1">Images and videos supported</p>
+          <p className="text-cyan-400 text-base font-semibold">
+            Drop your media here
+          </p>
+          <p className="text-cyan-400/60 text-xs mt-1">
+            Images and videos supported
+          </p>
         </div>
       )}
+
+      {/* Preview */}
       {imagePreview && (
         <div className="max-w-3xl mx-auto mb-3">
           <div className="relative inline-block">
@@ -110,14 +134,16 @@ function MessageInput() {
         </div>
       )}
 
-      <form onSubmit={handleSendMessage} className="max-w-3xl mx-auto flex items-end gap-2">
+      {/* Input */}
+      <form
+        onSubmit={handleSendMessage}
+        className="max-w-3xl mx-auto flex items-end gap-2"
+      >
         <div className="flex-1 bg-slate-800/60 border border-slate-700/50 rounded-2xl p-1.5 focus-within:border-cyan-500/50 focus-within:ring-2 focus-within:ring-cyan-500/20 transition-all">
           <input
             type="text"
             value={text}
-            onChange={(e) => {
-              setText(e.target.value);
-            }}
+            onChange={(e) => setText(e.target.value)}
             className="w-full bg-transparent border-0 text-slate-100 placeholder-slate-500 focus:outline-none px-3 py-2 text-sm"
             placeholder="Type your message..."
           />
@@ -138,7 +164,7 @@ function MessageInput() {
         >
           <ImageIcon className="w-5 h-5" />
         </button>
-        
+
         <button
           type="submit"
           disabled={!text.trim() && !imagePreview}
@@ -150,4 +176,5 @@ function MessageInput() {
     </div>
   );
 }
+
 export default MessageInput;

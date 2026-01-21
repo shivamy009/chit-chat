@@ -1,29 +1,42 @@
 import { useState, useEffect } from "react";
 import { XIcon, SearchIcon } from "lucide-react";
-import { useChatStore } from "../store/useChatStore";
-import { useAuthStore } from "../store/useAuthStore";
+import { useDispatch, useSelector } from "react-redux";
 import toast from "react-hot-toast";
 
+import { fetchContacts } from "../store/chatSlice";
+import { forwardMessage } from "../store/chatSlice";
+
 function ForwardMessageModal({ message, onClose }) {
-  const { allContacts, getAllContacts, forwardMessage } = useChatStore();
-  const { onlineUsers } = useAuthStore();
+  const dispatch = useDispatch();
+
+  /* ---------------- REDUX STATE ---------------- */
+  const allContacts = useSelector((state) => state.chat.allContacts);
+  const onlineUsers = useSelector((state) => state.auth.onlineUsers);
+
+  /* ---------------- LOCAL STATE ---------------- */
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedUsers, setSelectedUsers] = useState([]);
 
+  /* ---------------- FETCH CONTACTS ---------------- */
   useEffect(() => {
-    getAllContacts();
-  }, [getAllContacts]);
+    dispatch(fetchContacts());
+  }, [dispatch]);
 
+  /* ---------------- FILTER ---------------- */
   const filteredContacts = allContacts.filter((contact) =>
     contact.fullName.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  /* ---------------- SELECT TOGGLE ---------------- */
   const toggleUserSelection = (userId) => {
     setSelectedUsers((prev) =>
-      prev.includes(userId) ? prev.filter((id) => id !== userId) : [...prev, userId]
+      prev.includes(userId)
+        ? prev.filter((id) => id !== userId)
+        : [...prev, userId]
     );
   };
 
+  /* ---------------- FORWARD ---------------- */
   const handleForward = async () => {
     if (selectedUsers.length === 0) {
       toast.error("Please select at least one contact");
@@ -32,8 +45,14 @@ function ForwardMessageModal({ message, onClose }) {
 
     try {
       for (const userId of selectedUsers) {
-        await forwardMessage(message, userId);
+        await dispatch(
+          forwardMessage({
+            message,
+            toUserId: userId,
+          })
+        );
       }
+
       toast.success(`Message forwarded to ${selectedUsers.length} contact(s)`);
       onClose();
     } catch (error) {
@@ -41,12 +60,15 @@ function ForwardMessageModal({ message, onClose }) {
     }
   };
 
+  /* ---------------- UI ---------------- */
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
       <div className="bg-slate-800 rounded-xl shadow-2xl w-full max-w-md mx-4 animate-in zoom-in duration-200">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-slate-700">
-          <h2 className="text-lg font-semibold text-slate-200">Forward Message</h2>
+          <h2 className="text-lg font-semibold text-slate-200">
+            Forward Message
+          </h2>
           <button
             onClick={onClose}
             className="text-slate-400 hover:text-slate-200 transition-colors"
@@ -82,38 +104,73 @@ function ForwardMessageModal({ message, onClose }) {
                     : "bg-slate-700/30 hover:bg-slate-700/50 border-2 border-transparent"
                 }`}
               >
-                <div className={`avatar ${onlineUsers.includes(contact._id) ? "online" : "offline"}`}>
+                <div
+                  className={`avatar ${
+                    onlineUsers.includes(contact._id)
+                      ? "online"
+                      : "offline"
+                  }`}
+                >
                   <div className="size-10 rounded-full">
-                    <img src={contact.profilePic || "/avatar.png"} alt={contact.fullName} />
+                    <img
+                      src={contact.profilePic || "/avatar.png"}
+                      alt={contact.fullName}
+                    />
                   </div>
                 </div>
+
                 <div className="flex-1">
-                  <h4 className="text-slate-200 font-medium">{contact.fullName}</h4>
+                  <h4 className="text-slate-200 font-medium">
+                    {contact.fullName}
+                  </h4>
                   <p className="text-xs text-slate-400">{contact.email}</p>
                 </div>
+
                 {selectedUsers.includes(contact._id) && (
                   <div className="w-5 h-5 bg-cyan-500 rounded-full flex items-center justify-center">
-                    <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                    <svg
+                      className="w-3 h-3 text-white"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={3}
+                        d="M5 13l4 4L19 7"
+                      />
                     </svg>
                   </div>
                 )}
               </div>
             ))
           ) : (
-            <p className="text-center text-slate-400 py-8">No contacts found</p>
+            <p className="text-center text-slate-400 py-8">
+              No contacts found
+            </p>
           )}
         </div>
 
         {/* Message Preview */}
         {message && (
           <div className="p-4 border-t border-slate-700">
-            <p className="text-xs text-slate-400 mb-2">Message to forward:</p>
+            <p className="text-xs text-slate-400 mb-2">
+              Message to forward:
+            </p>
             <div className="bg-slate-700/50 rounded-lg p-3">
               {message.image && (
-                <img src={message.image} alt="Preview" className="w-full h-32 object-cover rounded mb-2" />
+                <img
+                  src={message.image}
+                  alt="Preview"
+                  className="w-full h-32 object-cover rounded mb-2"
+                />
               )}
-              {message.text && <p className="text-sm text-slate-200">{message.text}</p>}
+              {message.text && (
+                <p className="text-sm text-slate-200">
+                  {message.text}
+                </p>
+              )}
             </div>
           </div>
         )}

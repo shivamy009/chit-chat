@@ -1,15 +1,17 @@
 import { useState } from "react";
-import { useAuthStore } from "../store/useAuthStore";
+import { useDispatch, useSelector } from "react-redux";
+import { login } from "../store/authSlice";
 import { MessageCircleIcon, MailIcon, LoaderIcon, LockIcon, SparklesIcon, ShieldCheckIcon, ZapIcon } from "lucide-react";
 import { Link } from "react-router";
 
 function LoginPage() {
+  const dispatch = useDispatch();
   const [formData, setFormData] = useState({ email: "", password: "" });
-  const { login, isLoggingIn } = useAuthStore();
+  const { isLoggingIn } = useSelector((state) => state.auth);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    login(formData);
+    dispatch(login(formData));
   };
 
   return (

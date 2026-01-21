@@ -1,4 +1,4 @@
-import { useChatStore } from "../store/useChatStore";
+import { useSelector } from "react-redux";
 import ProfileHeader from "../components/ProfileHeader";
 import ActiveTabSwitch from "../components/ActiveTabSwitch";
 import ChatsList from "../components/ChatsList";
@@ -7,7 +7,7 @@ import ChatContainer from "../components/ChatContainer";
 import NoConversationPlaceholder from "../components/NoConversationPlaceholder";
 
 function ChatPage() {
-  const { activeTab, selectedUser } = useChatStore();
+  const { activeTab, selectedUser } = useSelector((state) => state.chat);
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center p-4 md:p-6 relative overflow-hidden">

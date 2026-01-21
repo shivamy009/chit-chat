@@ -1,19 +1,50 @@
 import { Navigate, Route, Routes } from "react-router";
+import { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+
 import ChatPage from "./pages/ChatPage";
 import LoginPage from "./pages/LoginPage";
 import SignUpPage from "./pages/SignUpPage";
-import { useAuthStore } from "./store/useAuthStore";
-import { useEffect } from "react";
 import PageLoader from "./components/PageLoader";
 
+import { checkAuth, connectSocket, setOnlineUsers, disconnectSocket } from "./store/authSlice";
+import { socketManager } from "./lib/socket";
 import { Toaster } from "react-hot-toast";
 
 function App() {
-  const { checkAuth, isCheckingAuth, authUser } = useAuthStore();
+  const dispatch = useDispatch();
 
+  /* ---------------- REDUX STATE ---------------- */
+  const { authUser, isCheckingAuth } = useSelector((state) => state.auth);
+
+  /* ---------------- AUTH CHECK ---------------- */
   useEffect(() => {
-    checkAuth();
-  }, [checkAuth]);
+    dispatch(checkAuth());
+  }, [dispatch]);
+
+  /* ---------------- SOCKET CONNECT ---------------- */
+  useEffect(() => {
+    if (authUser) {
+      dispatch(connectSocket());
+      
+      const socket = socketManager.getSocket();
+      if (socket) {
+        socket.on("getOnlineUsers", (users) => {
+          console.log("Received online users:", users);
+          dispatch(setOnlineUsers(users));
+        });
+      }
+    } else {
+      dispatch(disconnectSocket());
+    }
+
+    return () => {
+      const socket = socketManager.getSocket();
+      if (socket) {
+        socket.off("getOnlineUsers");
+      }
+    };
+  }, [authUser, dispatch]);
 
   if (isCheckingAuth) return <PageLoader />;
 
@@ -25,13 +56,23 @@ function App() {
       <div className="absolute bottom-0 -right-4 size-96 bg-cyan-500 opacity-20 blur-[100px]" />
 
       <Routes>
-        <Route path="/" element={authUser ? <ChatPage /> : <Navigate to={"/login"} />} />
-        <Route path="/login" element={!authUser ? <LoginPage /> : <Navigate to={"/"} />} />
-        <Route path="/signup" element={!authUser ? <SignUpPage /> : <Navigate to={"/"} />} />
+        <Route
+          path="/"
+          element={authUser ? <ChatPage /> : <Navigate to="/login" />}
+        />
+        <Route
+          path="/login"
+          element={!authUser ? <LoginPage /> : <Navigate to="/" />}
+        />
+        <Route
+          path="/signup"
+          element={!authUser ? <SignUpPage /> : <Navigate to="/" />}
+        />
       </Routes>
 
       <Toaster />
     </div>
   );
 }
+
 export default App;

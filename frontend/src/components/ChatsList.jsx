@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import UsersLoadingSkeleton from "./UsersLoadingSkeleton";
 import NoChatsFound from "./NoChatsFound";
@@ -17,6 +17,7 @@ function ChatsList() {
     chats,
     isUsersLoading,
     draggedMessage,
+    unreadCounts,
   } = useSelector((state) => state.chat);
 
   const onlineUsers = useSelector((state) => state.auth.onlineUsers);
@@ -27,6 +28,26 @@ function ChatsList() {
   useEffect(() => {
     dispatch(fetchChats());
   }, [dispatch]);
+
+  /* ---------------- SORTED CHATS ---------------- */
+  const sortedChats = useMemo(() => {
+    return [...chats].sort((a, b) => {
+      const aIsOnline = onlineUsers.includes(a._id);
+      const bIsOnline = onlineUsers.includes(b._id);
+      const aUnread = unreadCounts[a._id] || 0;
+      const bUnread = unreadCounts[b._id] || 0;
+
+      // 1. Online users first
+      if (aIsOnline && !bIsOnline) return -1;
+      if (!aIsOnline && bIsOnline) return 1;
+
+      // 2. Then by unread count (higher first)
+      if (aUnread !== bUnread) return bUnread - aUnread;
+
+      // 3. Keep original order
+      return 0;
+    });
+  }, [chats, onlineUsers, unreadCounts]);
 
   /* ---------------- DRAG HANDLERS ---------------- */
   const handleDragOver = (e, userId) => {
@@ -62,7 +83,7 @@ function ChatsList() {
   /* ---------------- UI ---------------- */
   return (
     <>
-      {chats.map((chat) => (
+      {sortedChats.map((chat) => (
         <div
           key={chat._id}
           className={`group relative p-3 rounded-xl cursor-pointer transition-all duration-200 ${
@@ -98,6 +119,15 @@ function ChatsList() {
                 {onlineUsers.includes(chat._id) ? "Active now" : "Offline"}
               </p>
             </div>
+
+            {/* Unread Badge */}
+            {unreadCounts[chat._id] > 0 && (
+              <div className="flex-shrink-0">
+                <div className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-xs font-bold rounded-full min-w-[20px] h-5 px-1.5 flex items-center justify-center shadow-lg">
+                  {unreadCounts[chat._id] > 99 ? "99+" : unreadCounts[chat._id]}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       ))}

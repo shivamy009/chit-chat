@@ -71,6 +71,7 @@ const chatSlice = createSlice({
     isUsersLoading: false,
     isMessagesLoading: false,
     draggedMessage: null,
+    unreadCounts: {}, // {userId: count}
   },
   reducers: {
     setActiveTab: (state, action) => {
@@ -78,15 +79,36 @@ const chatSlice = createSlice({
     },
     setSelectedUser: (state, action) => {
       state.selectedUser = action.payload;
+      // Clear unread count when selecting a user
+      if (action.payload) {
+        state.unreadCounts[action.payload._id] = 0;
+      }
     },
     setDraggedMessage: (state, action) => {
       state.draggedMessage = action.payload;
     },
     addMessage: (state, action) => {
-      state.messages.push(action.payload);
+      const message = action.payload;
+      state.messages.push(message);
+      
+      // Increment unread count if message is from someone else and not current chat
+      const authUserId = message.receiverId; // Current user is the receiver
+      const senderId = message.senderId;
+      
+      if (state.selectedUser?._id !== senderId) {
+        state.unreadCounts[senderId] = (state.unreadCounts[senderId] || 0) + 1;
+      }
     },
     clearMessages: (state) => {
       state.messages = [];
+    },
+    incrementUnreadCount: (state, action) => {
+      const userId = action.payload;
+      state.unreadCounts[userId] = (state.unreadCounts[userId] || 0) + 1;
+    },
+    clearUnreadCount: (state, action) => {
+      const userId = action.payload;
+      state.unreadCounts[userId] = 0;
     },
   },
   extraReducers: (builder) => {
@@ -117,6 +139,10 @@ const chatSlice = createSlice({
       .addCase(fetchMessages.fulfilled, (state, action) => {
         state.isMessagesLoading = false;
         state.messages = action.payload;
+        // Clear unread count for the user whose messages were fetched
+        if (state.selectedUser) {
+          state.unreadCounts[state.selectedUser._id] = 0;
+        }
       })
       .addCase(fetchMessages.rejected, (state) => {
         state.isMessagesLoading = false;
@@ -133,6 +159,8 @@ export const {
   setDraggedMessage,
   addMessage,
   clearMessages,
+  incrementUnreadCount,
+  clearUnreadCount,
 } = chatSlice.actions;
 
 export default chatSlice.reducer;

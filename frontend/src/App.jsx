@@ -8,6 +8,7 @@ import SignUpPage from "./pages/SignUpPage";
 import PageLoader from "./components/PageLoader";
 
 import { checkAuth, connectSocket, setOnlineUsers, disconnectSocket } from "./store/authSlice";
+import { incrementUnreadCount } from "./store/chatSlice";
 import { socketManager } from "./lib/socket";
 import { Toaster } from "react-hot-toast";
 
@@ -16,6 +17,7 @@ function App() {
 
   /* ---------------- REDUX STATE ---------------- */
   const { authUser, isCheckingAuth } = useSelector((state) => state.auth);
+  const { selectedUser } = useSelector((state) => state.chat);
 
   /* ---------------- AUTH CHECK ---------------- */
   useEffect(() => {
@@ -33,6 +35,18 @@ function App() {
           console.log("Received online users:", users);
           dispatch(setOnlineUsers(users));
         });
+
+        // Global listener for new messages to update unread counts
+        socket.on("newMessage", (newMessage) => {
+          // Only increment unread if the message is not from the currently selected user
+          if (!selectedUser || newMessage.senderId !== selectedUser._id) {
+            dispatch(incrementUnreadCount(newMessage.senderId));
+            
+            // Play notification sound
+            const audio = new Audio("/sounds/notification.mp3");
+            audio.play().catch((err) => console.log("Audio play failed:", err));
+          }
+        });
       }
     } else {
       dispatch(disconnectSocket());
@@ -42,9 +56,10 @@ function App() {
       const socket = socketManager.getSocket();
       if (socket) {
         socket.off("getOnlineUsers");
+        socket.off("newMessage");
       }
     };
-  }, [authUser, dispatch]);
+  }, [authUser, dispatch, selectedUser]);
 
   if (isCheckingAuth) return <PageLoader />;
 

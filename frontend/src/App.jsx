@@ -41,10 +41,6 @@ function App() {
           // Only increment unread if the message is not from the currently selected user
           if (!selectedUser || newMessage.senderId !== selectedUser._id) {
             dispatch(incrementUnreadCount(newMessage.senderId));
-            
-            // Play notification sound
-            const audio = new Audio("/sounds/notification.mp3");
-            audio.play().catch((err) => console.log("Audio play failed:", err));
           }
         });
       }

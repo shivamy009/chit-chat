@@ -1,11 +1,12 @@
 import { useRef, useState } from "react";
 import { useChatStore } from "../store/useChatStore";
 import toast from "react-hot-toast";
-import { ImageIcon, SendIcon, XIcon } from "lucide-react";
+import { ImageIcon, SendIcon, XIcon, UploadCloudIcon } from "lucide-react";
 
 function MessageInput() {
   const [text, setText] = useState("");
   const [imagePreview, setImagePreview] = useState(null);
+  const [isDraggingOver, setIsDraggingOver] = useState(false);
 
   const fileInputRef = useRef(null);
 
@@ -26,8 +27,13 @@ function MessageInput() {
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
-    if (!file.type.startsWith("image/")) {
-      toast.error("Please select an image file");
+    if (!file) return;
+    processImageFile(file);
+  };
+
+  const processImageFile = (file) => {
+    if (!file.type.startsWith("image/") && !file.type.startsWith("video/")) {
+      toast.error("Please select an image or video file");
       return;
     }
 
@@ -36,13 +42,53 @@ function MessageInput() {
     reader.readAsDataURL(file);
   };
 
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingOver(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingOver(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingOver(false);
+
+    const files = e.dataTransfer.files;
+    if (files && files.length > 0) {
+      const file = files[0];
+      processImageFile(file);
+    }
+  };
+
   const removeImage = () => {
     setImagePreview(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   return (
-    <div className="p-4 border-t border-slate-700/50">
+    <div 
+      className={`p-4 border-t transition-all duration-200 ${
+        isDraggingOver 
+          ? "bg-cyan-500/10 border-cyan-500 border-2" 
+          : "border-slate-700/50"
+      }`}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
+      {isDraggingOver && (
+        <div className="max-w-3xl mx-auto mb-3 text-center py-8 border-2 border-dashed border-cyan-500 rounded-lg bg-cyan-500/5">
+          <UploadCloudIcon className="w-12 h-12 text-cyan-400 mx-auto mb-2 animate-bounce" />
+          <p className="text-cyan-400 text-lg font-medium">Drop your media file here</p>
+          <p className="text-cyan-400/70 text-sm mt-1">Images and videos supported</p>
+        </div>
+      )}
       {imagePreview && (
         <div className="max-w-3xl mx-auto mb-3 flex items-center">
           <div className="relative">
@@ -75,7 +121,7 @@ function MessageInput() {
 
         <input
           type="file"
-          accept="image/*"
+          accept="image/*,video/*"
           ref={fileInputRef}
           onChange={handleImageChange}
           className="hidden"

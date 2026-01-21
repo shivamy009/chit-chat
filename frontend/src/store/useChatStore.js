@@ -11,6 +11,9 @@ export const useChatStore = create((set, get) => ({
   selectedUser: null,
   isUsersLoading: false,
   isMessagesLoading: false,
+  draggedMessage: null,
+
+  setDraggedMessage: (message) => set({ draggedMessage: message }),
 
   setActiveTab: (tab) => set({ activeTab: tab }),
   setSelectedUser: (selectedUser) => set({ selectedUser }),
@@ -75,6 +78,34 @@ export const useChatStore = create((set, get) => ({
       // remove optimistic message on failure
       set({ messages: messages });
       toast.error(error.response?.data?.message || "Something went wrong");
+    }
+  },
+
+  forwardMessage: async (message, toUserId) => {
+    const { selectedUser } = get();
+    const { authUser } = useAuthStore.getState();
+    
+    // Use the currently selected user if no toUserId is provided
+    const receiverId = toUserId || selectedUser._id;
+    
+    // Get the message from current messages if only ID is passed
+    const msgToForward = message || get().messages.find(m => m._id === message);
+    
+    if (!msgToForward) {
+      toast.error("Message not found");
+      return;
+    }
+
+    const forwardData = {
+      text: msgToForward.text,
+      image: msgToForward.image,
+    };
+
+    try {
+      await axiosInstance.post(`/messages/send/${receiverId}`, forwardData);
+      toast.success("Message forwarded successfully!");
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to forward message");
     }
   },
 

@@ -35,7 +35,7 @@ A real-time chat application built with the MERN stack, featuring Socket.io for 
 ### Frontend
 - **React** - UI library
 - **Vite** - Build tool
-- **Redux Toolkit** - State management
+- **Redux** - State management
 - **Socket.io Client** - Real-time communication
 - **Axios** - HTTP client
 - **Tailwind CSS** - Styling

@@ -54,8 +54,22 @@ function ChatContainer() {
 
   /* ---------------- AUTO SCROLL ---------------- */
   useEffect(() => {
-    messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+    if (messages.length > 0 && !isMessagesLoading) {
+      // Scroll to bottom immediately when opening a chat or when new messages arrive
+      setTimeout(() => {
+        messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      }, 100);
+    }
+  }, [messages, isMessagesLoading]);
+
+  /* ---------------- SCROLL TO BOTTOM ON USER CHANGE ---------------- */
+  useEffect(() => {
+    if (selectedUser && messages.length > 0) {
+      setTimeout(() => {
+        messageEndRef.current?.scrollIntoView({ behavior: "instant" });
+      }, 150);
+    }
+  }, [selectedUser?._id]);
 
   /* ---------------- DRAG HANDLERS ---------------- */
   const handleDragStart = (e, message) => {

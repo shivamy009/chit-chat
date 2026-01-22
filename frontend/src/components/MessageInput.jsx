@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import toast from "react-hot-toast";
 import {
@@ -19,6 +19,13 @@ function MessageInput() {
   const [isDraggingOver, setIsDraggingOver] = useState(false);
 
   const fileInputRef = useRef(null);
+
+  /* ---------------- CLEAR INPUT ON USER SWITCH ---------------- */
+  useEffect(() => {
+    setText("");
+    setImagePreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }, [selectedUser?._id]);
 
   /* ---------------- SEND MESSAGE ---------------- */
   const handleSendMessage = (e) => {

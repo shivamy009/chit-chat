@@ -20,12 +20,39 @@ function MessageInput() {
 
   const fileInputRef = useRef(null);
 
-  /* ---------------- CLEAR INPUT ON USER SWITCH ---------------- */
+  /* ---------------- LOAD SAVED INPUT ON USER SWITCH ---------------- */
   useEffect(() => {
-    setText("");
-    setImagePreview(null);
+    if (!selectedUser?._id) return;
+
+    // Load saved unsent message for this user
+    const savedText = localStorage.getItem(`unsent_message_${selectedUser._id}`);
+    const savedImage = localStorage.getItem(`unsent_image_${selectedUser._id}`);
+
+    setText(savedText || "");
+    setImagePreview(savedImage || null);
     if (fileInputRef.current) fileInputRef.current.value = "";
   }, [selectedUser?._id]);
+
+  /* ---------------- PERSIST INPUT TO LOCALSTORAGE ---------------- */
+  useEffect(() => {
+    if (!selectedUser?._id) return;
+
+    if (text) {
+      localStorage.setItem(`unsent_message_${selectedUser._id}`, text);
+    } else {
+      localStorage.removeItem(`unsent_message_${selectedUser._id}`);
+    }
+  }, [text, selectedUser?._id]);
+
+  useEffect(() => {
+    if (!selectedUser?._id) return;
+
+    if (imagePreview) {
+      localStorage.setItem(`unsent_image_${selectedUser._id}`, imagePreview);
+    } else {
+      localStorage.removeItem(`unsent_image_${selectedUser._id}`);
+    }
+  }, [imagePreview, selectedUser?._id]);
 
   /* ---------------- SEND MESSAGE ---------------- */
   const handleSendMessage = (e) => {
@@ -42,8 +69,11 @@ function MessageInput() {
       })
     );
 
+    // Clear both state and localStorage
     setText("");
     setImagePreview(null);
+    localStorage.removeItem(`unsent_message_${selectedUser._id}`);
+    localStorage.removeItem(`unsent_image_${selectedUser._id}`);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
@@ -91,6 +121,9 @@ function MessageInput() {
 
   const removeImage = () => {
     setImagePreview(null);
+    if (selectedUser?._id) {
+      localStorage.removeItem(`unsent_image_${selectedUser._id}`);
+    }
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 

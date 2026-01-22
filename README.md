@@ -137,9 +137,10 @@ CLOUDINARY_API_SECRET=your_cloudinary_api_secret
 
 # Arcjet Configuration
 ARCJET_KEY=your_arcjet_api_key
+ARCJET_ENV=development
 
 # CORS
-FRONTEND_URL=http://localhost:5173
+CLIENT_URL=http://localhost:5173
 ```
 
 ### Frontend (.env)

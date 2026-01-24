@@ -9,19 +9,26 @@ import { connectDB } from "./lib/db.js";
 import { ENV } from "./lib/env.js";
 import { app, server } from "./lib/socket.js";
 
-const __dirname = path.resolve();
+// const __dirname = path.resolve();
 
 const PORT = ENV.PORT || 3000;
 
 // CORS configuration
+const allowedOrigins = [
+  ENV.CLIENT_URL,
+  'https://chit-chat-m1yb.vercel.app'
+  // Add your additional frontend URLs here
+  // "https://your-other-frontend.vercel.app",
+];
+
 const corsOptions = {
   origin: function (origin, callback) {
     // Allow requests with no origin (like mobile apps or curl)
     if (!origin) return callback(null, true);
     
-    // In production, check against CLIENT_URL
+    // In production, check against allowed origins
     if (ENV.NODE_ENV === "production") {
-      if (origin === ENV.CLIENT_URL) {
+      if (allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
         callback(new Error('Not allowed by CORS'));
